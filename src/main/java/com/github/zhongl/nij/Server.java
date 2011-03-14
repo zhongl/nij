@@ -1,7 +1,6 @@
 package com.github.zhongl.nij;
 
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 
 public class Server {
   private static volatile boolean running = true;
@@ -20,10 +19,11 @@ public class Server {
     ServerSocket server = new ServerSocket(port, backlog);
     server.setSoTimeout(500);
     System.out.println("Server accepting at port " + server.getLocalPort() + " with backlog " + backlog);
-    for (; ;) {
-      Socket client = server.accept();
-      if (!running) break;
-      if (client != null) client.close();
+    while (running) {
+      try {
+        Socket client = server.accept();
+        if (client != null) client.close();
+      } catch (SocketTimeoutException e) { }
     }
     server.close();
   }
