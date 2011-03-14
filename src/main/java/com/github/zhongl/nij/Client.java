@@ -6,10 +6,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Client {
+  private static String host;
+  private static int port;
+  private static int thread;
+
   public static void main(String... args) throws Exception {
-    final String host = args[0];
-    final int port = Integer.parseInt(args[1]);
-    final int thread = Integer.parseInt(args[2]);
+    try {
+      host = args[0];
+      port = Integer.parseInt(args[1]);
+      thread = Integer.parseInt(args[2]);
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("Usage : <host> <port> <thread>");
+      System.exit(-1);
+    }
+
 
     final AtomicLong elapse = new AtomicLong();
     final AtomicInteger failed = new AtomicInteger();
