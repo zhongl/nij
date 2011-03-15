@@ -24,8 +24,10 @@ public class Server {
       @Override
       public void run() {
         Multiplexors.shutdownAll();
+        System.out.println("Stopped.");
       }
     });
+    System.out.println("Started at port: " + port + " with backlog: " + backlog + " receive buffer: " + size + "k.");
   }
 
   private static int kb(int kb) {return kb * 1024;}
