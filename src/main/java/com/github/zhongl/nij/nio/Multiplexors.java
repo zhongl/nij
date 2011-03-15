@@ -111,8 +111,9 @@ public final class Multiplexors {
           final SelectionKey key = iterator.next();
           iterator.remove();
           if (key.isAcceptable()) acceptableKey = key;
-          if (key.isReadable()) read(key);
-          if (key.isWritable()) write(key);
+          else if (key.isReadable()) read(key);
+          else if (key.isWritable()) write(key);
+
         }
 
         if (acceptableKey == null) return;
