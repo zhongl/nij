@@ -173,6 +173,7 @@ public final class Multiplexors {
             channel.write(OK_200);
           } catch (IOException e) {
             LOGGER.error("Close broken channel " + channel, e);
+          } finally {
             silentClose(channel);
           }
 //          interest(OP_READ,key);
