@@ -90,7 +90,7 @@ public final class Multiplexors {
 
     @Override
     public void run() {
-      while (running) try { select(); } catch (Exception e) { /* TODO log error*/ }
+      while (running) try { select(); } catch (Exception e) { LOGGER.error("Unexpect error in selecting.", e); }
       silentCloseChannelOf(selector.keys());
       silentClose(selector);
       SET.remove(this);

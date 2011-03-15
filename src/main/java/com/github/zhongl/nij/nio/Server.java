@@ -8,10 +8,11 @@ public class Server {
   public static void main(String... args) throws Exception {
     final ServerSocketChannel channel = ServerSocketChannel.open();
 
-    final int port = Integer.parseInt(args[0]);
-    final int backlog = Integer.parseInt(args[1]);
-    final int size = Integer.parseInt(args[2]);
-    final SocketAddress address = new InetSocketAddress("localhost", port);
+    final String host = args[0];
+    final int port = Integer.parseInt(args[1]);
+    final int backlog = Integer.parseInt(args[2]);
+    final int size = Integer.parseInt(args[3]);
+    final SocketAddress address = new InetSocketAddress(host, port);
     channel.socket().setReuseAddress(true);
     channel.socket().setReceiveBufferSize(kb(size));
     channel.configureBlocking(false);
@@ -27,7 +28,10 @@ public class Server {
         System.out.println("Stopped.");
       }
     });
-    System.out.println("Started at port: " + port + " with backlog: " + backlog + " receive buffer: " + size + "k.");
+
+    System.out.println("Started at " + host + ":" + port +
+        " with backlog: " + backlog +
+        " receive buffer: " + size + "k.");
   }
 
   private static int kb(int kb) {return kb * 1024;}
