@@ -110,14 +110,14 @@ public final class Multiplexors {
         while (iterator.hasNext()) {
           final SelectionKey key = iterator.next();
           iterator.remove();
-          if (key.isAcceptable()) acceptableKey = key;
-          else if (key.isReadable()) read(key);
-          else if (key.isWritable()) write(key);
+          if (key.isAcceptable()) /*acceptableKey = key;*/ accept(key,selector);
+          if (key.isReadable()) read(key);
+//          if (key.isValid() && key.isWritable()) write(key);
 
         }
 
-        if (acceptableKey == null) return;
-        accept(acceptableKey, selector);
+//        if (acceptableKey == null) return;
+//        accept(acceptableKey, selector);
         /** Solve too many keys may slow down selecting. */
 //        if (registered < THRESHOLD) accept(acceptableKey, selector);
 //        else startANewMultiplexorWithout(acceptableKey);
