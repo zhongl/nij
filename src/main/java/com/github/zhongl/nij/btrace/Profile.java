@@ -31,7 +31,7 @@ public class Profile {
   }
 
   @OnMethod(clazz = "/.*/", method = "registeredKeys", location = @Location(Kind.RETURN))
-  public static void registered(@Self Object obj, int result) {
+  public static void registered(@Self Object obj, @Return int result) {
     registered.set(result);
   }
 
