@@ -37,12 +37,12 @@ public class Profile {
   }
 
   @OnMethod(clazz = "/.*/", method = "readAndWrite", location = @Location(Kind.ENTRY))
-  public static void readAndWriteEnter(@Self Object obj) {
+  public static void readAndWriteEnter(@Self Object obj, Object... args) {
     vars.put(obj, System.nanoTime());
   }
 
   @OnMethod(clazz = "/.*/", method = "readAndWrite", location = @Location(Kind.RETURN))
-  public static void readAndWriteExit(@Self Object obj) {
+  public static void readAndWriteExit(@Self Object obj, Object... args) {
     long current = System.nanoTime();
     elapse.addAndGet(current - vars.get(obj));
   }
