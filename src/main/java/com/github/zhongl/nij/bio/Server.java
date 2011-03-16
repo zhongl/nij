@@ -1,6 +1,6 @@
 package com.github.zhongl.nij.bio;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,10 +53,14 @@ public class Server {
       public void run() {
         try {
           accept.setTcpNoDelay(true);
-          accept.setSendBufferSize(64 * 1024);
-          accept.getInputStream().read(BUFFER);
-          accept.getOutputStream().write(RESPONSE);
-          accept.getOutputStream().flush();
+          accept.setSendBufferSize(1 * 1024);
+          final InputStream inputStream = new BufferedInputStream(accept.getInputStream()) ;
+          inputStream.read(BUFFER);
+          inputStream.close();
+          final OutputStream outputStream = new BufferedOutputStream(accept.getOutputStream());
+          outputStream.write(RESPONSE);
+//          outputStream.flush();
+          outputStream.close();
         } catch (IOException e) {
           LOGGER.error("Unexpected error", e);
         } finally {
