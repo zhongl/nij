@@ -2,8 +2,7 @@ package com.github.zhongl.nij.bio;
 
 import java.io.*;
 import java.net.*;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -39,8 +38,10 @@ public class Server {
 
     Acceptor acceptor = null;
 
-    if (type.equals("s")) acceptor = new SocketAcceptor(address, size, backlog);
-    else acceptor = new ChannelAcceptor(address, size, backlog);
+    if (type.equals("s"))
+      acceptor = new SocketAcceptor(address, size, backlog);
+    else
+      acceptor = new ChannelAcceptor(address, size, backlog);
 
     while (running) {
       try {
@@ -63,9 +64,8 @@ public class Server {
           final OutputStream outputStream = new BufferedOutputStream(accept.getOutputStream());
           inputStream.read(BUFFER);
           outputStream.write(RESPONSE);
-//          outputStream.flush();
-//          outputStream.close();
-//          inputStream.close();
+          outputStream.close();
+          inputStream.close();
         } catch (IOException e) {
           LOGGER.error("Unexpected error", e);
         } finally {
@@ -94,6 +94,8 @@ public class Server {
       channel.socket().setReuseAddress(true);
       channel.socket().bind(address, backlog);
       channel.configureBlocking(false);
+
+      channel.register(selector, SelectionKey.OP_ACCEPT);
     }
 
     @Override
