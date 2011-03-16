@@ -106,13 +106,12 @@ public final class Multiplexors {
 
       if (selected > 0) {
         SelectionKey acceptableKey = null;
-        Set<SelectionKey> selectedKeys = selector.selectedKeys();
-        for (SelectionKey key : selectedKeys) {
+        for (SelectionKey key : selector.selectedKeys()) {
           if (key.isAcceptable()) acceptableKey = key;
           else if (key.isReadable()) read(key);
           else if (key.isWritable()) write(key);
         }
-        selectedKeys.clear();
+        selector.selectedKeys().clear();
         if (acceptableKey == null) return;
         accept(acceptableKey, selector);
         /** Solve too many keys may slow down selecting. */
