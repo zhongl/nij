@@ -100,30 +100,28 @@ public final class Multiplexors {
     // TODO limit max acceptance.
     private void select() throws Exception {
       final int selected = selector.select(500L);
-      final int registered = selector.keys().size();
+      final int registered = registeredKeys();
 
       if (registered == 0 && thenShutdown()) return;
 
       if (selected > 0) {
         SelectionKey acceptableKey = null;
-
-        final Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-        while (iterator.hasNext()) {
-          final SelectionKey key = iterator.next();
-          iterator.remove();
-          if (key.isAcceptable()) /*acceptableKey = key;*/ accept(key, selector);
-          if (key.isReadable()) read(key);
-//          if (key.isValid() && key.isWritable()) write(key);
-
+        Set<SelectionKey> selectedKeys = selector.selectedKeys();
+        for (SelectionKey key : selectedKeys) {
+          if (key.isAcceptable()) acceptableKey = key;
+          else if (key.isReadable()) read(key);
+          else if (key.isWritable()) write(key);
         }
-
-//        if (acceptableKey == null) return;
-//        accept(acceptableKey, selector);
+        selectedKeys.clear();
+        if (acceptableKey == null) return;
+        accept(acceptableKey, selector);
         /** Solve too many keys may slow down selecting. */
 //        if (registered < THRESHOLD) accept(acceptableKey, selector);
 //        else startANewMultiplexorWithout(acceptableKey);
       }
     }
+
+    private int registeredKeys() {return selector.keys().size();}
 
 
     private void startANewMultiplexorWithout(SelectionKey acceptableKey) {
