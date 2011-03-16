@@ -2,6 +2,7 @@ package com.github.zhongl.nij.btrace;
 
 import static com.sun.btrace.BTraceUtils.*;
 
+import java.text.MessageFormat;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -37,7 +38,7 @@ public class Profile {
   @OnTimer(1000)
   public static void print() {
     if (count.get() == 0) return;
-    String status = String
+    String status = MessageFormat
         .format("count: {0}, accept avg: {1} ns, registered cur: {2}", count.get(), (durations.get() / count
             .get()), registered.get());
     System.out.println(status);
