@@ -15,9 +15,10 @@ import com.sun.btrace.annotations.*;
  */
 @BTrace
 public class Profile {
-  private static Map<String, AtomicInteger> histo = Collections.newHashMap();
+  private static Map<Object, Long> vars = Collections.newHashMap();
   private static AtomicLong lastTime = newAtomicLong(0L);
   private static AtomicLong durations = newAtomicLong(0L);
+  private static AtomicLong elapse = newAtomicLong(0L);
   private static AtomicLong count = newAtomicLong(0L);
   private static AtomicInteger registered = newAtomicInteger(0);
 
@@ -35,12 +36,24 @@ public class Profile {
     registered.set(result);
   }
 
+  @OnMethod(clazz = "/.*/", method = "readAndWrite", location = @Location(Kind.ENTRY))
+  public static void readAndWriteEnter(@Self Object obj) {
+    vars.put(obj, System.nanoTime());
+  }
+
+  @OnMethod(clazz = "/.*/", method = "readAndWrite", location = @Location(Kind.RETURN))
+  public static void readAndWriteExit(@Self Object obj) {
+    long current = System.nanoTime();
+    elapse.addAndGet(current - vars.get(obj));
+  }
+
   @OnTimer(1000)
   public static void print() {
-    if (count.get() == 0) return;
+    final long c = count.get();
+    if (c == 0) return;
     String status = MessageFormat
-        .format("count: {0}, accept avg: {1} ns, registered cur: {2}, threads: {3}", count.get(), (durations
-            .get() / count.get()), registered.get(), daemonThreadCount());
+        .format("count: {0}, accept avg: {1} ns, registered cur: {2}, threads: {3}, readAndWrite avg:{4}", c, (durations
+            .get() / c), registered.get(), daemonThreadCount(), (elapse.get() / c));
     System.out.println(status);
   }
 }

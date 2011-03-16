@@ -60,12 +60,7 @@ public class Server {
         try {
           accept.setTcpNoDelay(true);
           accept.setSendBufferSize(1 * 1024);
-          final InputStream inputStream = new BufferedInputStream(accept.getInputStream());
-          final OutputStream outputStream = new BufferedOutputStream(accept.getOutputStream());
-          inputStream.read(BUFFER);
-          outputStream.write(RESPONSE);
-          outputStream.close();
-          inputStream.close();
+          readAndWrite(accept);
         } catch (IOException e) {
           LOGGER.error("Unexpected error", e);
         } finally {
@@ -73,6 +68,15 @@ public class Server {
         }
       }
     });
+  }
+
+  private static void readAndWrite(Socket accept) throws IOException {
+    final InputStream inputStream = new BufferedInputStream(accept.getInputStream());
+    final OutputStream outputStream = new BufferedOutputStream(accept.getOutputStream());
+    inputStream.read(BUFFER);
+    outputStream.write(RESPONSE);
+    outputStream.close();
+    inputStream.close();
   }
 
   private static void silentClose(Closeable closeable) { try {closeable.close(); } catch (IOException e) { } }

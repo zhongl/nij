@@ -14,6 +14,7 @@ public class Server {
     final int port = Integer.parseInt(args[1]);
     final int backlog = Integer.parseInt(args[2]);
     final int size = Integer.parseInt(args[3]);
+    final int num = Integer.parseInt(args[4]);
     final SocketAddress address = new InetSocketAddress(host, port);
     channel.socket().setReuseAddress(true);
     channel.socket().setReceiveBufferSize(Utils.kb(size));
@@ -21,7 +22,7 @@ public class Server {
 
     channel.socket().bind(address, backlog);
 
-    Multiplexors.startWith(channel);
+    for(int i = 0; i < num;i++) Multiplexors.startWith(channel);
 
     Runtime.getRuntime().addShutdownHook(new Thread("Shutdown-hook") {
       @Override

@@ -167,17 +167,21 @@ public final class Multiplexors {
         @Override
         public void run() {
           final SocketChannel channel = (SocketChannel) key.channel();
-          try {
-            channel.read(BUFFER.duplicate());
-            channel.write(OK_200.asReadOnlyBuffer());
-          } catch (IOException e) {
-            LOGGER.error("Close broken channel " + channel, e);
-          } finally {
-            silentClose(channel);
-          }
+          readAndWrite(channel);
 //          interest(OP_READ,key);
         }
       });
+    }
+
+    private void readAndWrite(SocketChannel channel) {
+      try {
+        channel.read(BUFFER.duplicate());
+        channel.write(OK_200.asReadOnlyBuffer());
+      } catch (IOException e) {
+        LOGGER.error("Close broken channel " + channel, e);
+      } finally {
+        silentClose(channel);
+      }
     }
 
   }
