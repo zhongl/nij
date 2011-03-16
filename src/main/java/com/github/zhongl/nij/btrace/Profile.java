@@ -39,8 +39,8 @@ public class Profile {
   public static void print() {
     if (count.get() == 0) return;
     String status = MessageFormat
-        .format("count: {0}, accept avg: {1} ns, registered cur: {2}", count.get(), (durations.get() / count
-            .get()), registered.get());
+        .format("count: {0}, accept avg: {1} ns, registered cur: {2}, threads: {3}", count.get(), (durations
+            .get() / count.get()), registered.get(), daemonThreadCount());
     System.out.println(status);
   }
 }
