@@ -111,7 +111,7 @@ public final class Multiplexors {
         while (iterator.hasNext()) {
           final SelectionKey key = iterator.next();
           iterator.remove();
-          if (key.isAcceptable()) /*acceptableKey = key;*/ accept(key,selector);
+          if (key.isAcceptable()) /*acceptableKey = key;*/ accept(key, selector);
           if (key.isReadable()) read(key);
 //          if (key.isValid() && key.isWritable()) write(key);
 
@@ -190,5 +190,5 @@ public final class Multiplexors {
   private static void interest(int ops, SelectionKey key) {key.interestOps(key.interestOps() | ops);}
 
   private final static ExecutorService service = Executors
-      .newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+      .newFixedThreadPool(Integer.getInteger("thread.pool.size", Runtime.getRuntime().availableProcessors() * 2));
 }

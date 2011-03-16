@@ -13,7 +13,7 @@ public class Server {
   private static volatile boolean running = true;
   private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
   private static final ExecutorService SERVICE = Executors
-      .newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+      .newFixedThreadPool(Integer.getInteger("thread.pool.size", Runtime.getRuntime().availableProcessors() * 2));
   private static final byte[] BUFFER = new byte[1024];
   private static final byte[] RESPONSE = "HTTP/1.0 200 OK\r\nContent-Length:1\r\n\r\na".getBytes();
 
@@ -24,7 +24,7 @@ public class Server {
     final int size = Integer.parseInt(args[3]);
     final SocketAddress address = new InetSocketAddress(host, port);
 
-    Runtime.getRuntime().addShutdownHook(new Thread("shutdow-hook"){
+    Runtime.getRuntime().addShutdownHook(new Thread("shutdow-hook") {
       @Override
       public void run() { running = false; }
     });
@@ -54,7 +54,7 @@ public class Server {
         try {
           accept.setTcpNoDelay(true);
           accept.setSendBufferSize(1 * 1024);
-          final InputStream inputStream = new BufferedInputStream(accept.getInputStream()) ;
+          final InputStream inputStream = new BufferedInputStream(accept.getInputStream());
           final OutputStream outputStream = new BufferedOutputStream(accept.getOutputStream());
           inputStream.read(BUFFER);
           outputStream.write(RESPONSE);
