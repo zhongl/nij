@@ -24,6 +24,7 @@ public final class Multiplexors {
   public static void shutdownAll() {
     for (Multiplexor multiplexor : SET)
       multiplexor.shutdown();
+    service.shutdownNow();
   }
 
   private static void silentClose(Selector selector) {

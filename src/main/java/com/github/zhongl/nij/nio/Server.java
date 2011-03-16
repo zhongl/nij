@@ -4,6 +4,8 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.ServerSocketChannel;
 
+import com.github.zhongl.nij.util.Utils;
+
 public class Server {
   public static void main(String... args) throws Exception {
     final ServerSocketChannel channel = ServerSocketChannel.open();
@@ -14,7 +16,7 @@ public class Server {
     final int size = Integer.parseInt(args[3]);
     final SocketAddress address = new InetSocketAddress(host, port);
     channel.socket().setReuseAddress(true);
-    channel.socket().setReceiveBufferSize(kb(size));
+    channel.socket().setReceiveBufferSize(Utils.kb(size));
     channel.configureBlocking(false);
 
     channel.socket().bind(address, backlog);
@@ -33,7 +35,5 @@ public class Server {
         " with backlog: " + backlog +
         " receive buffer: " + size + "k.");
   }
-
-  private static int kb(int kb) {return kb * 1024;}
 
 }
