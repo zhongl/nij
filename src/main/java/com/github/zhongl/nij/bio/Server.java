@@ -55,12 +55,12 @@ public class Server {
           accept.setTcpNoDelay(true);
           accept.setSendBufferSize(1 * 1024);
           final InputStream inputStream = new BufferedInputStream(accept.getInputStream()) ;
-          inputStream.read(BUFFER);
-          inputStream.close();
           final OutputStream outputStream = new BufferedOutputStream(accept.getOutputStream());
+          inputStream.read(BUFFER);
           outputStream.write(RESPONSE);
 //          outputStream.flush();
-          outputStream.close();
+//          outputStream.close();
+//          inputStream.close();
         } catch (IOException e) {
           LOGGER.error("Unexpected error", e);
         } finally {
