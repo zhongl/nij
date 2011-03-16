@@ -37,7 +37,9 @@ public class Profile {
   @OnTimer(1000)
   public static void print() {
     if (count.get() == 0) return;
-    System.out.println("accept avg :" + (durations.get() / count.get()) + " ns");
-    System.out.println("registered cur :" + registered.get());
+    String status = String
+        .format("count: {0}, accept avg: {1} ns, registered cur: {2}", count.get(), (durations.get() / count
+            .get()), registered.get());
+    System.out.println(status);
   }
 }
