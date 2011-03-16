@@ -18,19 +18,26 @@ public class Profile {
   private static AtomicLong lastTime = newAtomicLong(0L);
   private static AtomicLong durations = newAtomicLong(0L);
   private static AtomicLong count = newAtomicLong(0L);
+  private static AtomicInteger registered = newAtomicInteger(0);
 
   @OnMethod(clazz = "/.*/", method = "accept")
-  public static void onnewObject(@Self Object obj) {
+  public static void accept(@Self Object obj) {
     long current = System.nanoTime();
     long last = lastTime.getAndSet(current);
-    if(last == 0) return;
+    if (last == 0) return;
     durations.addAndGet(current - last);
     count.getAndIncrement();
   }
 
+  @OnMethod(clazz = "/.*/", method = "registeredKeys", location = @Location(Kind.RETURN))
+  public static void registered(@Self Object obj, int result) {
+    registered.set(result);
+  }
+
   @OnTimer(1000)
   public static void print() {
-    if(count.get() == 0) return ;
-    System.out.println((durations.get() / count.get()) + " ns");
+    if (count.get() == 0) return;
+    System.out.println("accept avg :" + (durations.get() / count.get()) + " ns");
+    System.out.println("registered cur :" + registered.get());
   }
 }
