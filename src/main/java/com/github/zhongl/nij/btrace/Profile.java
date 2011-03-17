@@ -7,12 +7,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.sun.btrace.AnyType;
 import com.sun.btrace.annotations.*;
 
-/**
- * This sample collects histogram of javax.swing.JComponets created by traced app. The histogram is printed once every 4
- * seconds.
- */
 @BTrace
 public class Profile {
   private static Map<Object, Long> vars = Collections.newHashMap();
@@ -37,12 +34,12 @@ public class Profile {
   }
 
   @OnMethod(clazz = "/.*/", method = "readAndWrite", location = @Location(Kind.ENTRY))
-  public static void readAndWriteEnter(@Self Object obj, Object... args) {
+  public static void readAndWriteEnter(@Self Object obj, AnyType... args) {
     vars.put(obj, System.nanoTime());
   }
 
   @OnMethod(clazz = "/.*/", method = "readAndWrite", location = @Location(Kind.RETURN))
-  public static void readAndWriteExit(@Self Object obj, Object... args) {
+  public static void readAndWriteExit(@Self Object obj,  AnyType... args) {
     long current = System.nanoTime();
     elapse.addAndGet(current - vars.get(obj));
   }
