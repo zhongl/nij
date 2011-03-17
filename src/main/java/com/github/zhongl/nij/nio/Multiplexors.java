@@ -75,6 +75,7 @@ public final class Multiplexors {
       byte[] bytes = "HTTP/1.0 200 OK\r\nContent-Length:1\r\n\r\na".getBytes();
       OK_200 = ByteBuffer.allocateDirect(bytes.length);
       OK_200.put(bytes);
+      OK_200.flip();
     }
 
     private static final ByteBuffer BUFFER = ByteBuffer.allocateDirect(1024);
