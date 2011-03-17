@@ -35,13 +35,13 @@ public class Profile {
 
   @OnMethod(clazz = "/.*/", method = "readAndWrite", location = @Location(Kind.ENTRY))
   public static void readAndWriteEnter(AnyType... args) {
-    vars.put(args[0], System.nanoTime());
+    vars.put(Thread.currentThread(), System.nanoTime());
   }
 
   @OnMethod(clazz = "/.*/", method = "readAndWrite", location = @Location(Kind.RETURN))
   public static void readAndWriteExit(AnyType... args) {
     long current = System.nanoTime();
-    elapse.addAndGet(current - vars.remove(args[0]));
+    elapse.addAndGet(current - vars.remove(Thread.currentThread()));
   }
 
   @OnTimer(1000)
@@ -49,7 +49,7 @@ public class Profile {
     final long c = count.get();
     if (c == 0) return;
     String status = MessageFormat
-        .format("count: {0}, accept avg: {1} ns, registered cur: {2}, threads: {3}, readAndWrite avg:{4}", c, (durations
+        .format("count: {0}, accept avg: {1} ns, registered cur: {2}, threads: {3}, readAndWrite avg:{4} ns", c, (durations
             .get() / c), registered.get(), daemonThreadCount(), (elapse.get() / c));
     println(status);
   }
