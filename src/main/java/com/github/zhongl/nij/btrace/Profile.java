@@ -29,7 +29,7 @@ public class Profile {
   }
 
   @OnMethod(clazz = "/.*/", method = "registeredKeys", location = @Location(Kind.RETURN))
-  public static void registered(@Self Object obj, @Return int result) {
+  public static void registered(@Return int result) {
     registered.set(result);
   }
 
@@ -49,7 +49,7 @@ public class Profile {
     final long c = count.get();
     if (c == 0) return;
     String status = MessageFormat
-        .format("count: {0}, accept avg: {1} ns, registered cur: {2}, threads: {3}, readAndWrite avg:{4} ns", c, (durations
+        .format("count: {0}, accept avg: {1} ns, registered cur: {2}, threads: {3}, readAndWrite avg: {4} ns", c, (durations
             .get() / c), registered.get(), Thread.activeCount(), (elapse.get() / c));
     println(status);
   }
