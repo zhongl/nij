@@ -41,7 +41,7 @@ public class Profile {
   @OnMethod(clazz = "/.*/", method = "readAndWrite", location = @Location(Kind.RETURN))
   public static void readAndWriteExit(AnyType... args) {
     long current = System.nanoTime();
-    elapse.addAndGet(current - vars.get(args[0]));
+    elapse.addAndGet(current - vars.remove(args[0]));
   }
 
   @OnTimer(1000)
@@ -51,6 +51,6 @@ public class Profile {
     String status = MessageFormat
         .format("count: {0}, accept avg: {1} ns, registered cur: {2}, threads: {3}, readAndWrite avg:{4}", c, (durations
             .get() / c), registered.get(), daemonThreadCount(), (elapse.get() / c));
-    System.out.println(status);
+    println(status);
   }
 }
