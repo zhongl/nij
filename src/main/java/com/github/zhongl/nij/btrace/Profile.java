@@ -34,14 +34,14 @@ public class Profile {
   }
 
   @OnMethod(clazz = "/.*/", method = "readAndWrite", location = @Location(Kind.ENTRY))
-  public static void readAndWriteEnter(@Self Object obj, AnyType... args) {
-    vars.put(obj, System.nanoTime());
+  public static void readAndWriteEnter(AnyType... args) {
+    vars.put(args[0], System.nanoTime());
   }
 
   @OnMethod(clazz = "/.*/", method = "readAndWrite", location = @Location(Kind.RETURN))
-  public static void readAndWriteExit(@Self Object obj,  AnyType... args) {
+  public static void readAndWriteExit(AnyType... args) {
     long current = System.nanoTime();
-    elapse.addAndGet(current - vars.get(obj));
+    elapse.addAndGet(current - vars.get(args[0]));
   }
 
   @OnTimer(1000)
