@@ -33,20 +33,12 @@ public class Server {
 
 
     System.out.println("Started at " + host + ":" + port +
-        " with backlog: " + backlog +
-        " receive buffer: " + size + "k.");
+        " with backlog: " + backlog + " receive buffer: " + size + "k.");
 
-    Acceptor acceptor = null;
-
-    if (type.equals("s"))
-      acceptor = new SocketAcceptor(address, size, backlog);
-    else
-      acceptor = new ChannelAcceptor(address, size, backlog);
+    final Acceptor acceptor = AcceptorType.valueOf(type.toUpperCase()).build(address, size, backlog);
 
     while (running) {
-      try {
-        handle(acceptor.accept());
-      } catch (SocketTimeoutException e) { }
+      try { handle(acceptor.accept()); } catch (SocketTimeoutException e) { }
     }
     silentClose(acceptor);
     SERVICE.shutdownNow();
@@ -82,6 +74,22 @@ public class Server {
   private static void silentClose(Closeable closeable) { try {closeable.close(); } catch (IOException e) { } }
 
   private static void silentClose(Socket accept) { try { accept.close(); } catch (IOException e1) { } }
+
+  public enum AcceptorType {
+    S {
+      @Override
+      Acceptor build(SocketAddress address, int size, int backlog) throws IOException {
+        return new SocketAcceptor(address, size, backlog);
+      }
+    }, C {
+      @Override
+      Acceptor build(SocketAddress address, int size, int backlog) throws IOException {
+        return new ChannelAcceptor(address, size, backlog);
+      }
+    };
+
+    abstract Acceptor build(SocketAddress address, int size, int backlog) throws IOException;
+  }
 
   public interface Acceptor extends Closeable {
     Socket accept() throws IOException;
