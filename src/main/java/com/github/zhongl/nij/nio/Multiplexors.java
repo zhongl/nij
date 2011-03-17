@@ -47,9 +47,9 @@ public final class Multiplexors {
     try {
       channel = serverSocketChannel.accept();
       if (channel == null) return;
-//    channel.socket().setSoLinger(false, 0);
+      channel.socket().setSoLinger(true, 1);
       channel.socket().setTcpNoDelay(true);
-      channel.socket().setSendBufferSize(64 * 1024);
+      channel.socket().setSendBufferSize(1 * 1024);
       channel.configureBlocking(false);
       channel.register(selector, OP_READ /*| OP_WRITE*/ /*, stateObject*/);
     } catch (IOException e) {
