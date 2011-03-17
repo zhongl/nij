@@ -69,7 +69,14 @@ public final class Multiplexors {
 
     private final Selector selector;
     private volatile boolean running = true;
-    private static final ByteBuffer OK_200 = ByteBuffer.wrap("HTTP/1.0 200 OK\r\nContent-Length:1\r\n\r\na".getBytes());
+    private static final ByteBuffer OK_200;
+
+    static {
+      byte[] bytes = "HTTP/1.0 200 OK\r\nContent-Length:1\r\n\r\na".getBytes();
+      OK_200 = ByteBuffer.allocateDirect(bytes.length);
+      OK_200.put(bytes);
+    }
+
     private static final ByteBuffer BUFFER = ByteBuffer.allocateDirect(1024);
 
     private Multiplexor(Selector selector) {
