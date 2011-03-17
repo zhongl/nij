@@ -50,7 +50,7 @@ public class Profile {
     if (c == 0) return;
     String status = MessageFormat
         .format("count: {0}, accept avg: {1} ns, registered cur: {2}, threads: {3}, readAndWrite avg:{4} ns", c, (durations
-            .get() / c), registered.get(), daemonThreadCount(), (elapse.get() / c));
+            .get() / c), registered.get(), Thread.activeCount(), (elapse.get() / c));
     println(status);
   }
 }
