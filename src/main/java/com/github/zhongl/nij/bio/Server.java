@@ -74,8 +74,9 @@ public class Server {
         while (!stop) {
           try {
             Object[] args = queue.poll(1L, TimeUnit.SECONDS);
-            Socket socket = (Socket) args[0];
-            Handler handler = (Handler) args[1];
+            if (args == null) continue;
+            final Socket socket = (Socket) args[0];
+            final Handler handler = (Handler) args[1];
             handle(socket, handler);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
