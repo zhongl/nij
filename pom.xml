@@ -106,6 +106,20 @@
         </executions>
         <configuration>
           <scalaVersion>${scala.version}</scalaVersion>
+          <launchers>
+            <launcher>
+              <id>actor-server</id>
+              <mainClass>com.github.zhongl.nij.bio.ActorServer</mainClass>
+              <!-- args are optional -->
+              <!-- jvmArgs are optional -->
+              <jvmArgs>
+                <jvmArg>-Xmx4g</jvmArg>
+                <jvmArg>-Xms4g</jvmArg>
+                <jvmArg>-XX:NewRatio=2</jvmArg>
+              </jvmArgs>
+            </launcher>
+            <!-- you could define other launcher -->
+          </launchers>
         </configuration>
       </plugin>
     </plugins>
@@ -117,21 +131,6 @@
         <artifactId>maven-scala-plugin</artifactId>
         <configuration>
           <scalaVersion>${scala.version}</scalaVersion>
-          <launchers>
-            <launcher>
-              <id>actor-server</id>
-              <mainClass>com.github.zhongl.nij.bio.ActorServer</mainClass>
-              <!-- args are optional -->
-              <!-- jvmArgs are optional -->
-              <jvmArgs>
-                <jvmArg>-Xmx4g</jvmArg>
-                <jvmArg>-Xms4g</jvmArg>
-                <jvmArg> -XX:NewRatio=2</jvmArg>
-              </jvmArgs>
-            </launcher>
-            <!-- you could define other launcher -->
-          </launchers>
-
         </configuration>
       </plugin>
     </plugins>
