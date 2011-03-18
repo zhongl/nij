@@ -32,7 +32,8 @@ public class Server {
     final int port = Integer.parseInt(args[1]);
     final int backlog = Integer.parseInt(args[2]);
     final int size = Integer.parseInt(args[3]);
-    final String type = args[4];
+    final String acceptorType = args[4];
+    final String handlerType = args[5];
     final SocketAddress address = new InetSocketAddress(host, port);
 
     Runtime.getRuntime().addShutdownHook(new Thread("shutdow-hook") {
@@ -44,24 +45,25 @@ public class Server {
     System.out.println("Started at " + host + ":" + port +
         " with backlog: " + backlog + " receive buffer: " + size + "k.");
 
-    final Acceptor acceptor = AcceptorType.valueOf(type.toUpperCase()).build(address, size, backlog);
+    final Acceptor acceptor = AcceptorType.valueOf(acceptorType.toUpperCase()).build(address, size, backlog);
+    final Handler handler = Handler.valueOf(handlerType.toUpperCase());
 
     while (running) {
-      try { handle(acceptor.accept()); } catch (SocketTimeoutException e) { }
+      try { handle(acceptor.accept(), handler); } catch (SocketTimeoutException e) { }
     }
     silentClose(acceptor);
     SERVICE.shutdownNow();
     System.out.println("Stopped.");
   }
 
-  public static void handle(final Socket accept) {
+  public static void handle(final Socket accept, final Handler handler) {
     SERVICE.execute(new Runnable() {
       @Override
       public void run() {
         try {
           accept.setTcpNoDelay(true);
           accept.setSendBufferSize(1 * 1024);
-          readAndWrite(accept);
+          handler.readAndWrite(accept);
         } catch (IOException e) {
           LOGGER.error("Unexpected error", e);
         } finally {
@@ -71,19 +73,29 @@ public class Server {
     });
   }
 
-  private static void readAndWrite(Socket accept) throws IOException {
-    ReadableByteChannel readableByteChannel = Channels.newChannel(accept.getInputStream());
-    WritableByteChannel writableByteChannel = Channels.newChannel(accept.getOutputStream());
-    readableByteChannel.read(BUFFER_IN.duplicate());
-    writableByteChannel.write(BUFFER_OUT.asReadOnlyBuffer());
-    accept.shutdownOutput();
+  enum Handler {
+    S {
+      @Override
+      void readAndWrite(Socket socket) throws IOException {
+        final InputStream inputStream = new BufferedInputStream(socket.getInputStream());
+        final OutputStream outputStream = new BufferedOutputStream(socket.getOutputStream());
+        inputStream.read(BUFFER);
+        outputStream.write(RESPONSE);
+        outputStream.close();
+        inputStream.close();
+      }
+    }, C {
+      @Override
+      void readAndWrite(Socket socket) throws IOException {
+        final ReadableByteChannel readableByteChannel = Channels.newChannel(socket.getInputStream());
+        final WritableByteChannel writableByteChannel = Channels.newChannel(socket.getOutputStream());
+        readableByteChannel.read(BUFFER_IN.duplicate());
+        writableByteChannel.write(BUFFER_OUT.asReadOnlyBuffer());
+        socket.shutdownOutput();
+      }
+    };
 
-//    final InputStream inputStream = new BufferedInputStream(accept.getInputStream());
-//    final OutputStream outputStream = new BufferedOutputStream(accept.getOutputStream());
-//    inputStream.read(BUFFER);
-//    outputStream.write(RESPONSE);
-//    outputStream.close();
-//    inputStream.close();
+    abstract void readAndWrite(Socket socket) throws IOException;
   }
 
   private static void silentClose(Closeable closeable) { try {closeable.close(); } catch (IOException e) { } }
