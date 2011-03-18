@@ -46,7 +46,8 @@ public class Server {
 
     final Acceptor acceptor = AcceptorType.valueOf(acceptorType.toUpperCase()).build(address, size, backlog);
     final Handler handler = Handler.valueOf(handlerType.toUpperCase());
-    final Scheduler scheduler = SchedulerType.valueOf(schedulerType.toUpperCase()).builder(thread, backlog);
+    final Scheduler scheduler = SchedulerType.valueOf(schedulerType.toUpperCase())
+                                             .builder(thread, (backlog > 0 ? backlog : Integer.MAX_VALUE));
 
     while (running) {
       try { scheduler.schedule(acceptor.accept(), handler); } catch (SocketTimeoutException e) { }
