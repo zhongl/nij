@@ -41,21 +41,26 @@ public final class Multiplexors {
     try { closeable.close(); } catch (IOException e) { }
   }
 
-  private static void accept(SelectionKey key, Selector selector) {
-    final ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-    SocketChannel channel = null;
-    try {
-      channel = serverSocketChannel.accept();
-      if (channel == null) return;
-//      channel.socket().setSoLinger(true, 1);
-      channel.socket().setTcpNoDelay(true);
-      channel.socket().setSendBufferSize(1 * 1024);
-      channel.configureBlocking(false);
-      channel.register(selector, OP_READ /*| OP_WRITE*/ /*, stateObject*/);
-    } catch (IOException e) {
-      silentClose(channel);
-      LOGGER.error("Closed broken " + channel, e);
-    }
+  private static void accept(final SelectionKey key, final Selector selector) {
+    service.execute(new Runnable() {
+      @Override
+      public void run() {
+        final ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+        SocketChannel channel = null;
+        try {
+          channel = serverSocketChannel.accept();
+          if (channel == null) return;
+          channel.socket().setSoLinger(true, 1);
+          channel.socket().setTcpNoDelay(true);
+          channel.socket().setSendBufferSize(1 * 1024);
+          channel.configureBlocking(false);
+          channel.register(selector, OP_READ /*| OP_WRITE*/ /*, stateObject*/);
+        } catch (IOException e) {
+          silentClose(channel);
+          LOGGER.error("Closed broken " + channel, e);
+        }
+      }
+    });
 
   }
 
