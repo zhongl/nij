@@ -1,7 +1,7 @@
 package com.github.zhongl.nij.bio
 
 import java.net._
-import actors._
+import actors.Actor._
 import java.nio.channels._
 import java.nio._
 
@@ -12,8 +12,8 @@ object ActorServer {
   var BUFFER_OUT: ByteBuffer = null
 
   def main(args: Array[String]) {
-    println(args)
     val Array(host, port, backlog, size) = args
+    println(host, port, backlog, size)
     val socket: ServerSocket = new ServerSocket()
     socket.setReuseAddress(true);
     socket.setReceiveBufferSize(size.toInt * 1024)
@@ -24,21 +24,31 @@ object ActorServer {
     BUFFER_OUT.put(RESPONSE)
     BUFFER_OUT.flip
 
+    val dispatcher = actor {
+      println("acting")
+      loop {
+        react {
+          case accept: Socket => actor {
+            accept.setKeepAlive(false)
+            accept.setSendBufferSize(size.toInt * 1024)
+            accept.setSoLinger(true, 1)
+            accept.setTcpNoDelay(true)
+            val readableByteChannel: ReadableByteChannel = Channels.newChannel(accept.getInputStream)
+            val writableByteChannel: WritableByteChannel = Channels.newChannel(accept.getOutputStream)
+            readableByteChannel.read(BUFFER_IN.duplicate)
+            writableByteChannel.write(BUFFER_OUT.asReadOnlyBuffer)
+            accept.shutdownOutput
+            accept.close
+          }
+          case x => println(x)
+        }
+      }
+    }
+
     while (true) {
       try {
         val accept: Socket = socket.accept()
-        Actor.actor {
-          accept.setKeepAlive(false)
-          accept.setSendBufferSize(size.toInt * 1024)
-          accept.setSoLinger(true, 1)
-          accept.setTcpNoDelay(true)
-          val readableByteChannel: ReadableByteChannel = Channels.newChannel(accept.getInputStream)
-          val writableByteChannel: WritableByteChannel = Channels.newChannel(accept.getOutputStream)
-          readableByteChannel.read(BUFFER_IN.duplicate)
-          writableByteChannel.write(BUFFER_OUT.asReadOnlyBuffer)
-          accept.shutdownOutput
-          accept.close
-        }
+        dispatcher ! accept
       } catch {
         case e: SocketTimeoutException => Unit
       }
