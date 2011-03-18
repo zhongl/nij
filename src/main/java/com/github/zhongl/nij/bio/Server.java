@@ -4,8 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 import com.github.zhongl.nij.util.Utils;
 import org.slf4j.Logger;
@@ -14,8 +13,6 @@ import org.slf4j.LoggerFactory;
 public class Server {
   private static volatile boolean running = true;
   private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
-  private static final ExecutorService SERVICE = Executors
-      .newFixedThreadPool(Integer.getInteger("thread.pool.size", Runtime.getRuntime().availableProcessors() * 2));
   private static final byte[] BUFFER = new byte[1024];
   private static final byte[] RESPONSE = "HTTP/1.0 200 OK\r\nContent-Length:1\r\n\r\na".getBytes();
   private static final ByteBuffer BUFFER_IN = ByteBuffer.allocateDirect(1024);
@@ -34,6 +31,8 @@ public class Server {
     final int size = Integer.parseInt(args[3]);
     final String acceptorType = args[4];
     final String handlerType = args[5];
+    final String schedulerType = args[6];
+    final int thread = Integer.getInteger("thread.pool.size", Runtime.getRuntime().availableProcessors() * 2);
     final SocketAddress address = new InetSocketAddress(host, port);
 
     Runtime.getRuntime().addShutdownHook(new Thread("shutdow-hook") {
@@ -47,30 +46,108 @@ public class Server {
 
     final Acceptor acceptor = AcceptorType.valueOf(acceptorType.toUpperCase()).build(address, size, backlog);
     final Handler handler = Handler.valueOf(handlerType.toUpperCase());
+    final Scheduler scheduler = SchedulerType.valueOf(schedulerType.toUpperCase()).builder(thread, backlog);
 
     while (running) {
-      try { handle(acceptor.accept(), handler); } catch (SocketTimeoutException e) { }
+      try { scheduler.schedule(acceptor.accept(), handler); } catch (SocketTimeoutException e) { }
     }
     silentClose(acceptor);
-    SERVICE.shutdownNow();
+    scheduler.shutdown();
     System.out.println("Stopped.");
   }
 
-  public static void handle(final Socket accept, final Handler handler) {
-    SERVICE.execute(new Runnable() {
+  static abstract class Scheduler {
+
+    abstract void schedule(Socket socket, Handler handler);
+
+    abstract void shutdown();
+  }
+
+  static class ProcessorScheduler extends Scheduler {
+    private final BlockingQueue<Object[]> queue;
+    private volatile boolean stop = false;
+
+    class Processor extends Thread {
+
       @Override
       public void run() {
-        try {
-          accept.setTcpNoDelay(true);
-          accept.setSendBufferSize(1 * 1024);
-          handler.readAndWrite(accept);
-        } catch (IOException e) {
-          LOGGER.error("Unexpected error", e);
-        } finally {
-          silentClose(accept);
+        while (!stop) {
+          try {
+            Object[] args = queue.poll(1L, TimeUnit.SECONDS);
+            Socket socket = (Socket) args[0];
+            Handler handler = (Handler) args[1];
+            handle(socket, handler);
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+          }
         }
       }
-    });
+    }
+
+    ProcessorScheduler(int thread, int backlog) {
+      queue = new LinkedBlockingQueue<Object[]>(backlog);
+      for (int i = 0; i < thread; i++) {
+        new Processor().start();
+      }
+    }
+
+    @Override
+    void schedule(Socket socket, Handler handler) {
+      try {
+        queue.put(new Object[]{socket, handler});
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+    }
+
+    @Override
+    void shutdown() { stop = true; }
+  }
+
+  static class ExecutorScheduler extends Scheduler {
+    private final ExecutorService service;
+
+    ExecutorScheduler(int thread, int backlog) {
+      final LinkedBlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>(backlog);
+      this.service = new ThreadPoolExecutor(thread, thread, 0L, TimeUnit.MILLISECONDS, workQueue);
+    }
+
+    @Override
+    public void schedule(final Socket socket, final Handler handler) {
+      service.execute(new Runnable() {
+        @Override
+        public void run() { handle(socket, handler); }
+      });
+    }
+
+    @Override
+    void shutdown() { service.shutdownNow(); }
+  }
+
+  enum SchedulerType {
+    E {
+      @Override
+      Scheduler builder(int thread, int backlog) { return new ExecutorScheduler(thread, backlog); }
+    }, T {
+      @Override
+      Scheduler builder(int thread, int backlog) { return new ProcessorScheduler(thread, backlog); }
+    };
+
+    abstract Scheduler builder(int thread, int backlog);
+  }
+
+  public static void handle(final Socket accept, final Handler handler) {
+    try {
+      accept.setTcpNoDelay(true);
+      accept.setSendBufferSize(1 * 1024);
+      accept.setKeepAlive(false);
+      accept.setSoLinger(true, 1);
+      handler.readAndWrite(accept);
+    } catch (IOException e) {
+      LOGGER.error("Unexpected error", e);
+    } finally {
+      silentClose(accept);
+    }
   }
 
   enum Handler {
