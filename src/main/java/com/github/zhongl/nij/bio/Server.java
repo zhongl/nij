@@ -2,6 +2,7 @@ package com.github.zhongl.nij.bio;
 
 import java.io.*;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,6 +18,14 @@ public class Server {
       .newFixedThreadPool(Integer.getInteger("thread.pool.size", Runtime.getRuntime().availableProcessors() * 2));
   private static final byte[] BUFFER = new byte[1024];
   private static final byte[] RESPONSE = "HTTP/1.0 200 OK\r\nContent-Length:1\r\n\r\na".getBytes();
+  private static final ByteBuffer BUFFER_IN = ByteBuffer.allocateDirect(1024);
+  private static final ByteBuffer BUFFER_OUT;
+
+  static {
+    BUFFER_OUT = ByteBuffer.allocateDirect(RESPONSE.length);
+    BUFFER_OUT.put(RESPONSE);
+    BUFFER_OUT.flip();
+  }
 
   public static void main(String... args) throws Exception {
     final String host = args[0];
@@ -63,12 +72,18 @@ public class Server {
   }
 
   private static void readAndWrite(Socket accept) throws IOException {
-    final InputStream inputStream = new BufferedInputStream(accept.getInputStream());
-    final OutputStream outputStream = new BufferedOutputStream(accept.getOutputStream());
-    inputStream.read(BUFFER);
-    outputStream.write(RESPONSE);
-    outputStream.close();
-    inputStream.close();
+    ReadableByteChannel readableByteChannel = Channels.newChannel(accept.getInputStream());
+    WritableByteChannel writableByteChannel = Channels.newChannel(accept.getOutputStream());
+    readableByteChannel.read(BUFFER_IN.duplicate());
+    writableByteChannel.write(BUFFER_OUT.asReadOnlyBuffer());
+    accept.shutdownOutput();
+
+//    final InputStream inputStream = new BufferedInputStream(accept.getInputStream());
+//    final OutputStream outputStream = new BufferedOutputStream(accept.getOutputStream());
+//    inputStream.read(BUFFER);
+//    outputStream.write(RESPONSE);
+//    outputStream.close();
+//    inputStream.close();
   }
 
   private static void silentClose(Closeable closeable) { try {closeable.close(); } catch (IOException e) { } }
