@@ -29,13 +29,13 @@ abstract class EventPoller(val timeout: Long) extends Logging {
   }
 
   private def logErrorAndCloseChannelOf(key: SelectionKey): Unit = {
-    log.error("Close {}, because can't handle invalid key", selectedKey.channel)
-    silent {selectedKey.channel.close}
+    log.error("Close {}, because can't handle invalid key", key.channel)
+    silent {key.channel.close}
   }
 
   private def poll: Unit = {
     if (selector.select(timeout) > 0) handleSelectedKeys
-    self ! Poll
+    worker ! Poll
   }
 
   private def handleSelectedKeys: Unit = {
@@ -43,8 +43,8 @@ abstract class EventPoller(val timeout: Long) extends Logging {
     selector.selectedKeys.clear
   }
 
-  private class Worker extends Actor {
-    def act() = {
+  protected class Worker extends Actor {
+    final def act() = {
       loop {
         react {
           case Poll => poll

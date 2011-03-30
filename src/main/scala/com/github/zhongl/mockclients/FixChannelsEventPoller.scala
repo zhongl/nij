@@ -13,6 +13,7 @@ class FixChannelsEventPoller(num: Int, remote: InetSocketAddress, val handler: K
     channel.configureBlocking(false)
     channel.register(selector, SelectionKey.OP_CONNECT)
     channel.connect(remote)
+    log.info("connect to " + remote)
   }
 
   protected def doHandle = {

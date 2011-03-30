@@ -19,25 +19,25 @@ abstract class CertainKeyExtractor {
 }
 
 object Acceptable extends CertainKeyExtractor {
-  def uninterest(key: SelectionKey) = uninterest(SelectionKey.OP_ACCEPT, key)
+  def uninterest(key: SelectionKey) = Utils.uninterest(SelectionKey.OP_ACCEPT, key)
 
   def isInterest(key: SelectionKey) = key.isAcceptable
 }
 
 object Connectable extends CertainKeyExtractor {
-  def uninterest(key: SelectionKey) = uninterest(SelectionKey.OP_CONNECT, key)
+  def uninterest(key: SelectionKey) = Utils.uninterest(SelectionKey.OP_CONNECT, key)
 
   def isInterest(key: SelectionKey) = key.isConnectable
 }
 
 object Readable extends CertainKeyExtractor {
-  def isInterest(key: SelectionKey) = key.isReadable
+  def uninterest(key: SelectionKey) = Utils.uninterest(SelectionKey.OP_READ, key)
 
-  def uninterest(key: SelectionKey) = uninterest(SelectionKey.OP_READ, key)
+  def isInterest(key: SelectionKey) = key.isReadable
 }
 
 object Writable extends CertainKeyExtractor {
-  def uninterest(key: SelectionKey) = uninterest(SelectionKey.OP_WRITE, key)
+  def uninterest(key: SelectionKey) = Utils.uninterest(SelectionKey.OP_WRITE, key)
 
   def isInterest(key: SelectionKey) = key.isWritable
 }

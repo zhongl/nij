@@ -20,7 +20,7 @@ object Main {
 
     val handler = new KeyHandler {
       override def handleWritable(key: SelectionKey) = {
-        socketChannelOf(key).write(content)
+        socketChannelOf(key).write(content.asReadOnlyBuffer)
         interest(SelectionKey.OP_READ, key)
         key.attach(ByteBuffer.allocate(2))
       }
@@ -31,13 +31,16 @@ object Main {
         if (buf.hasRemaining) interest(SelectionKey.OP_READ, key)
         else {
           completed.countDown
-          if (buf == content) success.incrementAndGet
+          if (buf.array == content.array) success.incrementAndGet
         }
       }
 
       override def handleConnectable(key: SelectionKey) = {
         interest(SelectionKey.OP_WRITE, key)
-        val socket = socketChannelOf(key).socket
+        val channel = socketChannelOf(key)
+        println(channel.isConnected)
+        val socket = channel.socket
+        println(socket.isConnected)
         socket.setKeepAlive(false)
         socket.setTcpNoDelay(true)
         socket.setSoLinger(true, 0)
@@ -49,7 +52,7 @@ object Main {
     Runtime.getRuntime.addShutdownHook(new Thread() {override def run = {eventPoller.stop}})
 
     eventPoller.start
-
+    println("go")
     completed.await
 
     eventPoller.stop
