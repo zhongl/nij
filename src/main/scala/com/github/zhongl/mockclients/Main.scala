@@ -7,6 +7,7 @@ import com.github.zhongl.mockclients.Utils.{interest, socketChannelOf}
 import java.nio.ByteBuffer
 import scala.actors.threadpool.AtomicInteger
 import java.util.concurrent.CountDownLatch
+import java.util.Arrays
 
 object Main {
 
@@ -31,16 +32,13 @@ object Main {
         if (buf.hasRemaining) interest(SelectionKey.OP_READ, key)
         else {
           completed.countDown
-          if (buf.array == content.array) success.incrementAndGet
+          if (Arrays.equals(buf.array, content.array)) success.incrementAndGet
         }
       }
 
       override def handleConnectable(key: SelectionKey) = {
         interest(SelectionKey.OP_WRITE, key)
-        val channel = socketChannelOf(key)
-        println(channel.isConnected)
-        val socket = channel.socket
-        println(socket.isConnected)
+        val socket = socketChannelOf(key).socket
         socket.setKeepAlive(false)
         socket.setTcpNoDelay(true)
         socket.setSoLinger(true, 0)
@@ -57,7 +55,7 @@ object Main {
 
     eventPoller.stop
 
-    println("Completed : " + completed.getCount)
+    println("Completed : " + connections)
     println("Success : " + success.get)
   }
 

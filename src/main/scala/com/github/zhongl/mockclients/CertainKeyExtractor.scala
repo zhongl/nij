@@ -27,7 +27,7 @@ object Acceptable extends CertainKeyExtractor {
 object Connectable extends CertainKeyExtractor {
   def uninterest(key: SelectionKey) = Utils.uninterest(SelectionKey.OP_CONNECT, key)
 
-  def isInterest(key: SelectionKey) = key.isConnectable
+  def isInterest(key: SelectionKey) = key.isConnectable && Utils.socketChannelOf(key).finishConnect
 }
 
 object Readable extends CertainKeyExtractor {
