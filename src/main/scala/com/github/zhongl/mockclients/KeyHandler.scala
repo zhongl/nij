@@ -2,7 +2,9 @@ package com.github.zhongl.mockclients
 
 import java.nio.channels.SelectionKey
 
-
+/**
+ * {@link KeyHandler} define four method to handle different state key.
+ */
 trait KeyHandler {
   def handleAcceptable(key: SelectionKey): Unit = {}
 

@@ -3,6 +3,8 @@ package com.github.zhongl.mockclients
 import java.nio.channels.SelectionKey
 
 /**
+ * {@link CertainKeyExtractor} for key state pattern matching.
+ *
  * @author <a href="mailto:zhong.lunfu@gmail.com">zhongl</a>
  */
 abstract class CertainKeyExtractor {

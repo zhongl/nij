@@ -3,7 +3,9 @@ package com.github.zhongl.mockclients
 import scala.actors.Actor
 import java.nio.channels.{SocketChannel, SelectionKey}
 
-
+/**
+ * @author <a href="mailto:zhong.lunfu@gmail.com">zhongl</a>
+ */
 object Utils {
   def uninterest(ops: Int, key: SelectionKey): Unit = key.interestOps(key.interestOps & ~ops)
 

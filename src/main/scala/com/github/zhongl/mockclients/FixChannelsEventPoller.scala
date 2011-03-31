@@ -5,6 +5,11 @@ import java.nio.channels.SelectionKey
 import java.net.InetSocketAddress
 import com.github.zhongl.mockclients.Utils.{times, asynchronized}
 
+/**
+ * {@link FixChannelsEventPoller} is a nio event dispatcher for client.
+ *
+ * @author <a href="mailto:zhong.lunfu@gmail.com">zhongl</a>
+ */
 class FixChannelsEventPoller(num: Int, remote: InetSocketAddress, val handler: KeyHandler, timeout: Long)
     extends EventPoller(timeout) {
 

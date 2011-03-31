@@ -7,7 +7,10 @@ import scala.collection.JavaConversions._
 import com.github.zhongl.mockclients.Utils.silent
 
 /**
+ * {@link EventPoller} is a abstract class wrap a {@link Selector} to watching channels.
+ * It could be extended to a acceptor( accept connection) or proccessor (handle read and write) or dispatcher (dispatch io event).
  *
+ * @author <a href="mailto:zhong.lunfu@gmail.com">zhongl</a>
  */
 abstract class EventPoller(val timeout: Long) extends Logging {
   protected val selector = newSelector
