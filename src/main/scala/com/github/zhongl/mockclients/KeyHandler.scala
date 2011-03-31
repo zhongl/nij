@@ -4,6 +4,8 @@ import java.nio.channels.SelectionKey
 
 /**
  * {@link KeyHandler} define four method to handle different state key.
+ *
+ * @author <a href="mailto:zhong.lunfu@gmail.com">zhongl</a>
  */
 trait KeyHandler {
   def handleAcceptable(key: SelectionKey): Unit = {}
