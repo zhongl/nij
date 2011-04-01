@@ -3,7 +3,7 @@ package com.github.zhongl.mockclients
 import java.net.InetSocketAddress
 import java.nio.channels.SelectionKey
 
-import com.github.zhongl.mockclients.Utils.{interest, socketChannelOf}
+import com.github.zhongl.mockclients.Utils.{interest, socketChannelOf, silent => silentCall}
 import java.nio.ByteBuffer
 import scala.actors.threadpool.AtomicInteger
 import java.util.concurrent.CountDownLatch
@@ -33,7 +33,12 @@ object Main {
         else {
           completed.countDown
           if (Arrays.equals(buf.array, content.array)) success.incrementAndGet
+          /*
+           * silentCall {socketChannelOf(key).socket.shutdownOutput} can solve the setSoLinger(true,0) problem .
+           */
+          silentCall {socketChannelOf(key).close}
         }
+
       }
 
       override def handleConnectable(key: SelectionKey) = {
@@ -41,19 +46,19 @@ object Main {
         val socket = socketChannelOf(key).socket
         socket.setKeepAlive(false)
         socket.setTcpNoDelay(true)
-        socket.setSoLinger(true, 0)
+        socket.setSoLinger(true, 0) // (true ,0) can cause a IOException at remoter reading.
       }
     }
 
-    val eventPoller = new FixChannelsEventPoller(connections, target, handler, 500)
+    val engine = new MockClientsEngine(connections, target, handler, 500)
 
-    Runtime.getRuntime.addShutdownHook(new Thread() {override def run = {eventPoller.stop}})
+    Runtime.getRuntime.addShutdownHook(new Thread() {override def run = {engine.stop}})
 
-    eventPoller.start
+    engine.start
     println("go")
     completed.await
 
-    eventPoller.stop
+    engine.stop
 
     println("Completed : " + connections)
     println("Success : " + success.get)

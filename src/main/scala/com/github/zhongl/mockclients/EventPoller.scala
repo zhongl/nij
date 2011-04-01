@@ -16,12 +16,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 abstract class EventPoller(val timeout: Long) extends Logging {
   protected val selector = newSelector
   protected val worker = new Worker
-  
+
   private val inSelecting = new AtomicBoolean(false)
 
   final def start: Unit = worker.start ! Poll
 
-  final def stop: Unit = worker ! Exit
+  final def stop: Unit = worker ! Exit(null)
 
   protected def wakeup = if (inSelecting.compareAndSet(true, false)) selector.wakeup
 
@@ -51,8 +51,10 @@ abstract class EventPoller(val timeout: Long) extends Logging {
   }
 
   private def poll: Unit = {
-    if (hasSelectedKeys) handleSelectedKeys
-    worker ! Poll
+    try {
+      if (hasSelectedKeys) handleSelectedKeys
+      worker ! Poll
+    } catch {case t => worker ! Exit(t)}
   }
 
   private def handleSelectedKeys: Unit = {
@@ -65,7 +67,10 @@ abstract class EventPoller(val timeout: Long) extends Logging {
       loop {
         react {
           case Poll => poll
-          case Exit => silentCall {selector.close}; exit
+          case Exit(e) =>
+            if (selector.isOpen) silentCall {selector.close};
+            if (e != null) log.error("EventPoller exit with ", e)
+            exit
           case unknown: Command => extraExecute(unknown)
           case illegal => log.error("Illegal command {}", illegal)
         }
@@ -79,4 +84,4 @@ abstract class Command
 
 case class Poll extends Command
 
-case class Exit extends Command
+case class Exit(throwable: Throwable) extends Command
