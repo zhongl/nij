@@ -4,7 +4,8 @@ import java.nio.channels.SelectionKey
 import java.nio.channels.Selector.{open => newSelector}
 import scala.actors.Actor
 import scala.collection.JavaConversions._
-import com.github.zhongl.mockclients.Utils.silent
+import com.github.zhongl.mockclients.Utils.{silent => silentCall}
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * {@link EventPoller} is a abstract class wrap a {@link Selector} to watching channels.
@@ -15,10 +16,14 @@ import com.github.zhongl.mockclients.Utils.silent
 abstract class EventPoller(val timeout: Long) extends Logging {
   protected val selector = newSelector
   protected val worker = new Worker
+  
+  private val inSelecting = new AtomicBoolean(false)
 
   final def start: Unit = worker.start ! Poll
 
   final def stop: Unit = worker ! Exit
+
+  protected def wakeup = if (inSelecting.compareAndSet(true, false)) selector.wakeup
 
   protected def doHandle: PartialFunction[SelectionKey, Unit]
 
@@ -33,11 +38,20 @@ abstract class EventPoller(val timeout: Long) extends Logging {
 
   private def logErrorAndCloseChannelOf(key: SelectionKey): Unit = {
     log.error("Close {}, because can't handle invalid key", key.channel)
-    silent {key.channel.close}
+    silentCall {key.channel.close}
+  }
+
+  private def hasSelectedKeys: Boolean = {
+    inSelecting.set(true)
+    try {
+      selector.select(timeout) > 0
+    } finally {
+      inSelecting.set(false)
+    }
   }
 
   private def poll: Unit = {
-    if (selector.select(timeout) > 0) handleSelectedKeys
+    if (hasSelectedKeys) handleSelectedKeys
     worker ! Poll
   }
 
@@ -51,7 +65,7 @@ abstract class EventPoller(val timeout: Long) extends Logging {
       loop {
         react {
           case Poll => poll
-          case Exit => silent {selector.close}; exit
+          case Exit => silentCall {selector.close}; exit
           case unknown: Command => extraExecute(unknown)
           case illegal => log.error("Illegal command {}", illegal)
         }
@@ -59,10 +73,10 @@ abstract class EventPoller(val timeout: Long) extends Logging {
     }
   }
 
-  abstract class Command
-
-  case class Poll extends Command
-
-  case class Exit extends Command
-
 }
+
+abstract class Command
+
+case class Poll extends Command
+
+case class Exit extends Command
