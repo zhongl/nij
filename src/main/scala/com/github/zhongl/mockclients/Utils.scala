@@ -13,10 +13,10 @@ object Utils {
 
   def silent(call: => Unit): Unit = try {call} catch {case _ => Unit}
 
-  def asynchronized(handling: => Unit): Unit = Actor.actor {handling}
+  def asynchronized(call: => Unit): Unit = Actor.actor {call}
 
-  def times(num: Int)(f: => Any): Unit = num match {
-    case i if i > 0 => f; times(i - 1)(f)
+  def times(num: Int)(call: => Any): Unit = num match {
+    case i if i > 0 => call; times(i - 1)(call)
     case 0 => Unit
   }
 
