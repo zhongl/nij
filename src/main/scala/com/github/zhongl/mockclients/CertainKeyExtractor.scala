@@ -1,6 +1,7 @@
 package com.github.zhongl.mockclients
 
 import java.nio.channels.SelectionKey
+import com.github.zhongl.mockclients.Utils._
 
 /**
  * {@link CertainKeyExtractor} for key state pattern matching.
@@ -21,25 +22,25 @@ abstract class CertainKeyExtractor {
 }
 
 object Acceptable extends CertainKeyExtractor {
-  def uninterest(key: SelectionKey) = Utils.uninterest(SelectionKey.OP_ACCEPT, key)
+  def uninterest(key: SelectionKey) = uninterestAccept(key)
 
   def isInterest(key: SelectionKey) = key.isAcceptable
 }
 
 object Connectable extends CertainKeyExtractor {
-  def uninterest(key: SelectionKey) = Utils.uninterest(SelectionKey.OP_CONNECT, key)
+  def uninterest(key: SelectionKey) = uninterestConnect(key)
 
   def isInterest(key: SelectionKey) = key.isConnectable && Utils.socketChannelOf(key).finishConnect
 }
 
 object Readable extends CertainKeyExtractor {
-  def uninterest(key: SelectionKey) = Utils.uninterest(SelectionKey.OP_READ, key)
+  def uninterest(key: SelectionKey) = uninterestRead(key)
 
   def isInterest(key: SelectionKey) = key.isReadable
 }
 
 object Writable extends CertainKeyExtractor {
-  def uninterest(key: SelectionKey) = Utils.uninterest(SelectionKey.OP_WRITE, key)
+  def uninterest(key: SelectionKey) = uninterestWrite(key)
 
   def isInterest(key: SelectionKey) = key.isWritable
 }
