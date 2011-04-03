@@ -3,11 +3,13 @@ package com.github.zhongl.mockclients
 import java.net.InetSocketAddress
 import java.nio.channels.SelectionKey
 
-import com.github.zhongl.mockclients.Utils.{interest, socketChannelOf, silent => silentCall}
+import com.github.zhongl.mockclients.Utils.{silent => silentCall}
+import com.github.zhongl.mockclients.Utils._
 import java.nio.ByteBuffer
-import scala.actors.threadpool.AtomicInteger
 import java.util.concurrent.CountDownLatch
 import java.util.Arrays
+import actors.threadpool.{LinkedBlockingQueue, AtomicInteger}
+import actors.Actor
 
 object Main {
 
@@ -15,53 +17,27 @@ object Main {
     val Array(host, Num(port), Num(connections)) = args
     val target = new InetSocketAddress(host, port)
     val completed = new CountDownLatch(connections)
-    val success = new AtomicInteger()
+//    val success = new AtomicInteger
+    val requests = new LinkedBlockingQueue[Request]
 
-    val content = ByteBuffer.wrap("hi".getBytes)
-
-    val handler = new KeyHandler {
-      override def handleWritable(key: SelectionKey) = {
-        socketChannelOf(key).write(content.asReadOnlyBuffer)
-        interest(SelectionKey.OP_READ, key)
-        key.attach(ByteBuffer.allocate(2))
-      }
-
-      override def handleReadable(key: SelectionKey) = {
-        val buf = key.attachment.asInstanceOf[ByteBuffer]
-        socketChannelOf(key).read(buf)
-        if (buf.hasRemaining) interest(SelectionKey.OP_READ, key)
-        else {
-          completed.countDown
-          if (Arrays.equals(buf.array, content.array)) success.incrementAndGet
-          /*
-           * silentCall {socketChannelOf(key).socket.shutdownOutput} can solve the setSoLinger(true,0) problem .
-           */
-          silentCall {socketChannelOf(key).close}
-        }
-
-      }
-
-      override def handleConnectable(key: SelectionKey) = {
-        interest(SelectionKey.OP_WRITE, key)
-        val socket = socketChannelOf(key).socket
-        socket.setKeepAlive(false)
-        socket.setTcpNoDelay(true)
-        socket.setSoLinger(true, 0) // (true ,0) can cause a IOException at remoter reading.
-      }
+    Actor.actor {
+      requests.put(new Request(512, 100, 1024))
+      Unit
     }
 
-    val engine = new MockClientsEngine(connections, target, handler, 500)
+    val engine = new MockClientsEngine(connections, 1, requests, target, completed, 500)
 
     Runtime.getRuntime.addShutdownHook(new Thread() {override def run = {engine.stop}})
 
     engine.start
     println("go")
+
     completed.await
 
     engine.stop
 
     println("Completed : " + connections)
-    println("Success : " + success.get)
+//    println("Success : " + success.get)
   }
 
 }
