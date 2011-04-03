@@ -28,6 +28,8 @@ abstract class EventPoller(val timeout: Long) extends Logging {
 
   protected def doHandle: PartialFunction[SelectionKey, Unit]
 
+  protected def dispose: Unit = if (selector.isOpen) silentCall {selector.close}
+
   protected def extraExecute: PartialFunction[Command, Unit] = {
     case unknown: Command => log.error("Unknown command {}", unknown)
   }
@@ -68,7 +70,7 @@ abstract class EventPoller(val timeout: Long) extends Logging {
         react {
           case Poll => poll
           case Exit(cause) =>
-            if (selector.isOpen) silentCall {selector.close};
+            dispose
             if (cause.isEmpty) log.info("EventPoller exit normally.")
             else log.error("EventPoller exit cause by ", cause.get)
             exit
