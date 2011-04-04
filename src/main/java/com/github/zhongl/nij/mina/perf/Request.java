@@ -1,5 +1,6 @@
-package com.github.zhongl.nij.netty.echo;
+package com.github.zhongl.nij.mina.perf;
 
+/** @author <a href="mailto:zhong.lunfu@gmail.com">zhongl</a> */
 public class Request {
   public final int handleMilliseconds;
   public final int responseLength;

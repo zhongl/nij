@@ -1,10 +1,11 @@
-package com.github.zhongl.nij.netty.echo;
+package com.github.zhongl.nij.netty.perf;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.frame.FrameDecoder;
 
+/** @author <a href="mailto:zhong.lunfu@gmail.com">zhongl</a> */
 public class RequestDecoder extends FrameDecoder {
 
   @Override
@@ -24,10 +25,10 @@ public class RequestDecoder extends FrameDecoder {
       return null;
     }
 
-    final Request request = new Request(buffer.readInt(), buffer.readInt());
+    final int handleMilliseconds = buffer.readInt();
+    final int responseLength = buffer.readInt();
     buffer.readBytes(new byte[dataLength - 8]);
-//    buffer.resetReaderIndex();
-    return request;
+    return new Request(handleMilliseconds, responseLength);
   }
 }
 
