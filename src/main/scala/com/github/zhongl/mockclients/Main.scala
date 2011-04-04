@@ -3,45 +3,40 @@ package com.github.zhongl.mockclients
 import java.net.InetSocketAddress
 import java.nio.channels.SelectionKey
 
-import com.github.zhongl.mockclients.Utils.{silent => silentCall}
 import com.github.zhongl.mockclients.Utils._
-import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
-import java.util.Arrays
-import actors.threadpool.{LinkedBlockingQueue, AtomicInteger}
+import actors.threadpool.{LinkedBlockingQueue}
 import actors.Actor
 
-object Main {
+object Main extends Application {
 
-  def main(args: Array[String]) = {
-    val Array(host, Num(port), Num(connections)) = args
-    val target = new InetSocketAddress(host, port)
-    val completed = new CountDownLatch(connections)
-//    val success = new AtomicInteger
-    val requests = new LinkedBlockingQueue[Request]
+  val requestTimes = 10
+  val connections = 1
+  val requests = new LinkedBlockingQueue[Request]
+  val remote = new InetSocketAddress("localhost", 8080)
+  val completed = new CountDownLatch(requestTimes)
 
-    Actor.actor {
-      requests.put(new Request(512, 100, 1024))
-      Unit
-    }
+  var engines: List[MockClientsEngine] = Nil
 
-    val engine = new MockClientsEngine(connections, 1, requests, target, completed, 500)
 
-    Runtime.getRuntime.addShutdownHook(new Thread() {override def run = {engine.stop}})
-
-    engine.start
-    println("go")
-
-    completed.await
-
-    engine.stop
-
-    println("Completed : " + connections)
-//    println("Success : " + success.get)
+  times(1) {
+    engines ::= new MockClientsEngine(connections, 10, requests, remote, completed, 500)
   }
 
+  Runtime.getRuntime.addShutdownHook(new Thread() {override def run = {engines foreach {_.stop}}})
+
+  println("Test started.")
+
+  engines foreach {_.start}
+
+  times(requestTimes) {
+    requests.put(new Request(512, 10, 1024))
+  }
+
+  completed.await
+
+  engines foreach {_.stop}
+
+  println("Test completed.")
 }
 
-object Num {
-  def unapply(s: String): Option[Int] = try {Some(s.toInt)} catch {case _ => None}
-}
