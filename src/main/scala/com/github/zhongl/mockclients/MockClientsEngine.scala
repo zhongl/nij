@@ -40,7 +40,7 @@ class MockClientsEngine(clients: Int,
       asynchronized {
         operateByStateOf(key) {
           handlerOf(key).handleWritable(key)
-          if (isWriteOver(key)) statisticOf(socketChannelOf(key)).request
+          if (key.isValid && isWriteOver(key)) statisticOf(socketChannelOf(key)).request
         }
       }
     case Readable(key) =>
@@ -65,7 +65,6 @@ class MockClientsEngine(clients: Int,
     @volatile var currentRequest: Request = null
     @volatile var currentRequestByteBuffer: ByteBuffer = null
     @volatile var read = 0
-    @volatile var wrote = 0
 
     val channel = newSocketChannel
     val readBuffer = ByteBuffer.allocateDirect(2048)
