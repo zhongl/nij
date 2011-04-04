@@ -19,7 +19,7 @@ abstract class EventPoller(val timeout: Long) extends Logging {
 
   private val wakeupCalls = new AtomicInteger()
 
-  final def start: Unit = worker.start ! Poll
+  final def start: Unit = synchronized {if (worker.getState == Actor.State.New) worker.start ! Poll}
 
   final def stop: Unit = worker ! Exit(None)
 
