@@ -4,7 +4,20 @@
       <pattern>%d %t %-5p : %m%n</pattern>
     </encoder>
   </appender>
+
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <file>${statistics.log.file}</file>
+
+    <encoder>
+      <pattern>%d %m%n</pattern>
+    </encoder>
+  </appender>
+
   <root level="INFO">
     <appender-ref ref="STDOUT"/>
   </root>
+
+  <logger name="com.github.zhongl.mockclients.CommunicationStatistic" level="INFO" additivity="false">
+    <appender-ref ref="File"/>
+  </logger>
 </configuration>
